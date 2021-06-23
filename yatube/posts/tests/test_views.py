@@ -133,7 +133,7 @@ class PaginatorViewsTest(TestCase, MySetupTestCase):
         super().setUpClass()
         MySetupTestCase.setUpClass()
         cls.less_ten = 3
-        cls.page_count = DELTA_PAGE_COUNT * 2 + 3
+        cls.page_count = DELTA_PAGE_COUNT * 2 + cls.less_ten
         cls.posts = tuple(
             Post.objects.create(text=f'Тест {count}', author=cls.user,
                                 group=cls.group) for count in
