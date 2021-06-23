@@ -48,8 +48,8 @@ class PostsURLTests(TestCase, MySetupTestCase):
             cls.url_post_edit,
         )
         for url in auth_url_list:
+            response = cls.authorized_client.get(url)
             with self.subTest(url=url):
-                response = cls.authorized_client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_list_url_redirect_anonymous(self):
@@ -60,7 +60,7 @@ class PostsURLTests(TestCase, MySetupTestCase):
             cls.url_post_edit,
         )
         for url in url_list:
+            response = self.client.get(url)
             with self.subTest(url=url):
-                response = self.client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.FOUND)
                 self.assertEqual(response.url, f'/auth/login/?next={url}')

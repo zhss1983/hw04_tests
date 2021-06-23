@@ -74,7 +74,7 @@ class PostsSaveTests(TestCase, MySetupTestCase):
                 self.assertEqual(response.url, redirect_name)
                 self.assertEqual(response.status_code, HTTPStatus.FOUND)
                 self.assertEqual(post.author, cls.user)
-                if context['group'] != '':
+                if context['group']:
                     self.assertEqual(post.group.pk, context['group'])
                 else:
                     self.assertIsNone(post.group)

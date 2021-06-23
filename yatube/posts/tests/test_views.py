@@ -1,7 +1,7 @@
 from datetime import datetime as dt
 from http import HTTPStatus
 
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from .test_setups import MySetupTestCase
@@ -73,14 +73,14 @@ class PostsURLTests(TestCase, MySetupTestCase):
     def test_wron_user_edit_post(self):
         """Check redirect from edit_post page for an unauthorized user."""
         cls = self.__class__
+        authorized_client = Client()
         other_user = User.objects.create(
             username='other_user',
         )
-        cls.authorized_client.force_login(other_user)
-        response = cls.authorized_client.get(cls.url_post_edit)
+        authorized_client.force_login(other_user)
+        response = authorized_client.get(cls.url_post_edit)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertEqual(response.url, cls.url_post)
-        cls.authorized_client.force_login(cls.user)
 
 
 class PostsContextTests(TestCase, MySetupTestCase):
@@ -212,8 +212,8 @@ class PaginatorViewsTest(TestCase, MySetupTestCase):
             cls.url_profile,
         )
         for url in check_context:
+            response = cls.authorized_client.get(url)
             with self.subTest(url=url):
-                response = cls.authorized_client.get(url)
                 self.assertIn('page', response.context)
                 self.assertIn('from_page', response.context)
                 self.assertIn('to_page', response.context)
