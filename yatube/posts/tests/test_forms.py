@@ -26,7 +26,7 @@ class PostsSaveTests(TestCase, MySetupTestCase):
                 with self.subTest(form_field=field):
                     self.assertIsInstance(form.fields[field], type(value))
 
-    def test_auth_uses_save_post_and_correct_redirect(self):
+    def test_auth_user_save_post_and_correct_redirect(self):
         """Check save post and correct redirect."""
         cls = self.__class__
         context_list = (
@@ -57,7 +57,7 @@ class PostsSaveTests(TestCase, MySetupTestCase):
                     self.assertIsNone(post.group)
                 self.assertEqual(Post.objects.count(), count)
 
-    def test_auth_uses_edit_post_and_correct_redirect(self):
+    def test_auth_user_edit_post_and_correct_redirect(self):
         """Check edit post and correct redirect."""
         cls = self.__class__
         context_list = (
