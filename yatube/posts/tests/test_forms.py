@@ -1,5 +1,3 @@
-from http import HTTPStatus
-
 from django.test import TestCase
 
 from .test_setups import MySetupTestCase
@@ -28,53 +26,63 @@ class PostsSaveTests(TestCase, MySetupTestCase):
                 with self.subTest(form_field=field):
                     self.assertIsInstance(form.fields[field], type(value))
 
-    def test_auth_uses_save_post_and_correct_template(self):
-        """Check matching of template name and URL address."""
+    def test_auth_uses_save_post_and_correct_redirect(self):
+        """Check save post and correct redirect."""
         cls = self.__class__
-        auth_url_list = (
-            (
-                cls.url_new_post,
-                cls.url_index,
-                {
-                    'group': cls.group.pk,
-                    'text': ('Save new post (group = '
-                             f'{cls.group.pk}). {id(cls.group)}')
-                },
-            ),
-            (
-                cls.url_new_post,
-                cls.url_index,
-                {
-                    'group': '',
-                    'text': f'Save new post without group.  {id(cls.group)}'
-                },
-            ),
-            (
-                cls.url_post_edit,
-                cls.url_post,
-                {
-                    'group': cls.group.pk,
-                    'text': ('Edit post (group = '
-                             f'{cls.group.pk}).  {id(cls.group)}')
-                },
-            ),
-            (
-                cls.url_post_edit,
-                cls.url_post,
-                {
-                    'group': '',
-                    'text': f'Edit post without group.  {id(cls.group)}'
-                },
-            ),
+        context_list = (
+            {
+                'group': cls.group.pk,
+                'text': ('Save new post (group = '
+                         f'{cls.group.pk}). {id(cls.group)}')
+            },
+            {
+                'group': '',
+                'text': f'Save new post without group. {id(cls.group)}'
+            },
         )
-        for url, redirect_name, context in auth_url_list:
-            with self.subTest(url=url, context=context):
-                response = cls.authorized_client.post(url, data=context)
+        for context in context_list:
+            count = Post.objects.count()
+            with self.subTest(url=cls.url_new_post, context=context):
+                response = cls.authorized_client.post(
+                    cls.url_new_post,
+                    data=context
+                )
+                count += 1
                 post = Post.objects.filter(text=context['text']).last()
-                self.assertEqual(response.url, redirect_name)
-                self.assertEqual(response.status_code, HTTPStatus.FOUND)
+                self.assertRedirects(response, cls.url_index)
                 self.assertEqual(post.author, cls.user)
                 if context['group']:
                     self.assertEqual(post.group.pk, context['group'])
                 else:
                     self.assertIsNone(post.group)
+                self.assertEqual(Post.objects.count(), count)
+
+    def test_auth_uses_edit_post_and_correct_redirect(self):
+        """Check edit post and correct redirect."""
+        cls = self.__class__
+        context_list = (
+            {
+                'group': cls.group.pk,
+                'text': ('Edit post (group = '
+                         f'{cls.group.pk}).  {id(cls.group)}')
+            },
+            {
+                'group': '',
+                'text': f'Edit post without group. {id(cls.group)}'
+            },
+        )
+        for context in context_list:
+            count = Post.objects.count()
+            with self.subTest(url=cls.url_post_edit, context=context):
+                response = cls.authorized_client.post(
+                    cls.url_post_edit,
+                    data=context
+                )
+                post = Post.objects.filter(text=context['text']).last()
+                self.assertRedirects(response, cls.url_post)
+                self.assertEqual(post.author, cls.user)
+                if context['group']:
+                    self.assertEqual(post.group.pk, context['group'])
+                else:
+                    self.assertIsNone(post.group)
+                self.assertEqual(Post.objects.count(), count)

@@ -62,5 +62,4 @@ class PostsURLTests(TestCase, MySetupTestCase):
         for url in url_list:
             response = self.client.get(url)
             with self.subTest(url=url):
-                self.assertEqual(response.status_code, HTTPStatus.FOUND)
-                self.assertEqual(response.url, f'/auth/login/?next={url}')
+                self.assertRedirects(response, f'/auth/login/?next={url}')
