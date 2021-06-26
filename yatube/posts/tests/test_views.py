@@ -1,5 +1,4 @@
 from datetime import datetime as dt
-from http import HTTPStatus
 
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -79,8 +78,7 @@ class PostsURLTests(TestCase, MySetupTestCase):
         )
         authorized_client.force_login(other_user)
         response = authorized_client.get(cls.url_post_edit)
-        self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        self.assertEqual(response.url, cls.url_post)
+        self.assertRedirects(response, cls.url_post)
 
 
 class PostsContextTests(TestCase, MySetupTestCase):
