@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 {% block title %}
   Просмотр записи от {{ post.pub_date|date:"d M Y H:i:s" }},
   {{ post.author.get_full_name }}
@@ -10,9 +9,59 @@
 {% endblock %}
 {% block content %}
   <div class="row">
-    {% include "includes\author_card.html" with author=post.author%}
+    <div class="col-md-3 mb-3 mt-1">
+      <div class="card">
+        <div class="card-body">
+          <div class="h2">
+            {{ post.author.get_full_name }}
+          </div>
+          <div class="h3 text-muted">
+            @{{ post.author.username }}
+          </div>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            <div class="h6 text-muted">
+              Подписчиков: XXX <br>
+              Подписан: XXX
+            </div>
+          </li>
+          <li class="list-group-item">
+            <div class="h6 text-muted">
+              Записей: {{ post.author.posts.count }}
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
     <div class="col-md-9">
-      {% include "includes\post_card.html" with add_comment=False %}
+      <div class="card mb-3 mt-1 shadow-sm">
+        <div class="card-body">
+          <p class="card-text">
+            <a href="{% url 'profile' username=post.author.username %}">
+              <strong class="d-block text-gray-dark">
+                {{ post.author.username }}
+              </strong>
+            </a>
+            {{ post.text|linebreaksbr }}
+          </p>
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="btn-group">
+              {% if user == post.author %}
+                {% url 'post_edit' username=user.username post_id=post.pk as post_edi_url %}
+                <a
+                  class="btn btn-sm text-muted"
+                  href="{{ post_edi_url }}"
+                  role="button"
+                >Редактировать</a>
+              {% endif %}
+            </div>
+            <small class="text-muted">
+              {{ post.pub_date|date:"d M Y" }}.
+            </small>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 {% endblock %}
