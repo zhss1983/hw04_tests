@@ -101,25 +101,4 @@ posts/tests/test_setups.py
 
 	Синаксис для всех однотипных: url_<name> = reverse('<name>')
 
-Я попытался заменить часть кода в шаблонах post.html и profile.html на include конструкцию. То что получилось отлично работает, файлы приложены по соответствующим ссылкам ниже. Так же я приложил include файлы. Они назвавны post_card.html и author_card.html
-Все тесты на моём компьютере проходят без проблем, однако при загрузуке на сервер это приводит к ошибкам в следующих тестах. Пока я это смог выяснить прошли практически сутки. Посмотрите файлы. Но загружать их сюда я считаю не рациональным пока не будут изменены тесты или какие-либо настройки определяющие их работу.
-
-	yatube/posts/tests/test_urls.py::PostsURLTests::test_url_exists_at_desired_location FAILED [ 52%]
-	
-	yatube/posts/tests/test_views.py::PostsURLTests::test_url_uses_correct_template_by_guest FAILED [ 65%]
-	
-	yatube/posts/tests/test_views.py::PostsURLTests::test_wron_user_edit_post FAILED [ 69%]
-	
-	yatube/posts/tests/test_views.py::PostsContextTests::test_posts_shows_correct_context FAILED [ 73%]
-	
-	yatube/posts/tests/test_views.py::PaginatorViewsTest::test_paginator_in_context FAILED [ 82%]
-
-https://dpaste.org/n6Sn posts/post.html
-
-https://dpaste.org/m2wt posts/profile.html
-
-https://dpaste.org/Ey8O includes/author_card.html
-
-https://dpaste.org/uD8G includes/post_card.html
-
 [![CI](https://github.com/yandex-praktikum/hw04_tests/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw04_tests/actions/workflows/python-app.yml)
