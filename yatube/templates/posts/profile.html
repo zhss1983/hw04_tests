@@ -3,10 +3,10 @@
 {% block header %}Профиль пользователя {{ author.get_full_name }}{% endblock %}
 {% block content %}
   <div class="row">
-    {% include "includes\author_card.html" %}
+    {% include "includes/author_card.html" %}
     <div class="col-md-9">
       {% for post in page %}
-        {% include "includes\post_card.html" with add_comment=True %}
+        {% include "includes/post_card.html" with add_comment=True %}
       {% endfor %}
       {% include "includes/paginator.html" %}
     </div>
