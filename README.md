@@ -114,9 +114,9 @@ posts/tests/test_setups.py
 	
 	yatube/posts/tests/test_views.py::PaginatorViewsTest::test_paginator_in_context FAILED [ 82%]
 
-https://dpaste.org/dEtJ posts/post.html
+https://dpaste.org/n6Sn posts/post.html
 
-https://dpaste.org/q2Nr posts/profile.html
+https://dpaste.org/m2wt posts/profile.html
 
 https://dpaste.org/Ey8O includes/author_card.html
 

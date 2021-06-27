@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 {% block title %}
   Просмотр записи от {{ post.pub_date|date:"d M Y H:i:s" }},
   {{ post.author.get_full_name }}
