@@ -23,6 +23,7 @@ SECRET_KEY = '@7wb^@135m+&okzndlvb1q$wzo1c1k16sxeq%d(30+e6(qk^xf'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+#DEBUG = False
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -49,6 +50,7 @@ INSTALLED_APPS = [
     'posts.apps.PostsConfig',
     'users.apps.UsersConfig',
     'about.apps.AboutConfig',
+    'sorl.thumbnail',
 ]
 
 MIDDLEWARE = [
@@ -139,8 +141,12 @@ STATICFILES_DIRS = [
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'yatube/static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static') # 'yatube/static'
 
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_URL = '/auth/login/'
 

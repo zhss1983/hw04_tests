@@ -1,3 +1,5 @@
+from os import path
+
 from django.test import TestCase
 
 from .test_setups import MySetupTestCase
@@ -10,6 +12,12 @@ class PostsSaveTests(TestCase, MySetupTestCase):
     def setUpClass(cls):
         super().setUpClass()
         MySetupTestCase.setUpClass()
+        MySetupTestCase.init_media()
+
+    @classmethod
+    def tearDownClass(cls):
+        MySetupTestCase.tearDownClass()
+        super().tearDownClass()
 
     def test_posts_contain_form(self):
         """Check templates on form context containing."""
@@ -33,11 +41,13 @@ class PostsSaveTests(TestCase, MySetupTestCase):
             {
                 'group': cls.group.pk,
                 'text': ('Save new post (group = '
-                         f'{cls.group.pk}). {id(cls.group)}')
+                         f'{cls.group.pk}). {id(cls.group)}'),
+                'image': cls.img_upload()
             },
             {
                 'group': '',
-                'text': f'Save new post without group. {id(cls.group)}'
+                'text': f'Save new post without group. {id(cls.group)}',
+                'image': cls.img_upload()
             },
         )
         for context in context_list:
@@ -47,8 +57,10 @@ class PostsSaveTests(TestCase, MySetupTestCase):
                     cls.url_new_post,
                     data=context
                 )
+                print(cls.url_new_post)
                 count += 1
                 post = Post.objects.filter(text=context['text']).last()
+                print(post)
                 self.assertRedirects(response, cls.url_index)
                 self.assertEqual(post.author, cls.user)
                 if context['group']:
@@ -56,6 +68,7 @@ class PostsSaveTests(TestCase, MySetupTestCase):
                 else:
                     self.assertIsNone(post.group)
                 self.assertEqual(Post.objects.count(), count)
+                self.assertTrue(path.exists(post.image.path))
 
     def test_auth_user_edit_post_and_correct_redirect(self):
         """Check edit post and correct redirect."""
@@ -64,16 +77,19 @@ class PostsSaveTests(TestCase, MySetupTestCase):
             {
                 'group': cls.group.pk,
                 'text': ('Edit post (group = '
-                         f'{cls.group.pk}).  {id(cls.group)}')
+                         f'{cls.group.pk}).  {id(cls.group)}'),
+                'image': cls.img_upload()
             },
             {
                 'group': '',
-                'text': f'Edit post without group. {id(cls.group)}'
+                'text': f'Edit post without group. {id(cls.group)}',
+                    'image': cls.img_upload()
             },
         )
         for context in context_list:
             count = Post.objects.count()
             with self.subTest(url=cls.url_post_edit, context=context):
+                cur_img = cls.post.image
                 response = cls.authorized_client.post(
                     cls.url_post_edit,
                     data=context
@@ -85,4 +101,6 @@ class PostsSaveTests(TestCase, MySetupTestCase):
                     self.assertEqual(post.group.pk, context['group'])
                 else:
                     self.assertIsNone(post.group)
+                self.assertTrue(post.image)
+                self.assertNotEquals(post.image, cur_img)
                 self.assertEqual(Post.objects.count(), count)

@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+from os import path
 
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -123,6 +124,28 @@ class PostsContextTests(TestCase, MySetupTestCase):
             for name, value in context:
                 with self.subTest(url=url, name=name):
                     self.assertEqual(value, response.context[name])
+
+    def test_posts_shows_images(self):
+        """Check image context in multiposts pages."""
+        cls = self.__class__
+        url_list = (
+            cls.url_profile,
+            cls.url_group,
+            cls.url_index,
+        )
+        for url in url_list:
+            response = cls.authorized_client.get(url)
+            with self.subTest(url=url):
+                post_img = response.context['page'][-1].image
+                self.assertTrue(path.exists(post_img.path))
+
+    def test_post_show_image(self):
+        """Check image context in post."""
+        cls = self.__class__
+        url = cls.url_post
+        response = cls.authorized_client.get(url)
+        post_img = response.context['post'].image
+        self.assertTrue(path.exists(post_img.path))
 
 
 class PaginatorViewsTest(TestCase, MySetupTestCase):

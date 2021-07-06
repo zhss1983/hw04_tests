@@ -1,10 +1,12 @@
+from http import HTTPStatus
+
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
-from .forms import PostForm
-from .models import Group, Post, User
+from .forms import CommentForm, PostForm
+from .models import Group, Post, User, Comment
 from yatube.settings import DELTA_PAGE_COUNT, MAX_PAGE_COUNT
 
 
@@ -68,7 +70,34 @@ def profile(request, username):
 def post_view(request, username, post_id):
     """Shows the selected post."""
     post = get_object_or_404(Post, pk=post_id, author__username=username)
-    return render(request, 'posts/post.html', {'post': post})
+    form = CommentForm(instance=Comment(author=request.user, post=post))
+    context = {'form': form, 'post': post}
+    return render(request, 'posts/post.html', context)
+
+
+@require_http_methods(['POST'])
+@login_required
+def add_comment(request, username, post_id):
+    """Add new post's comment in blog.
+
+    This method form a page for writeing new post's comment and check
+    it one.
+    ????????
+    If all fields are correct, the new record will be added to
+    the database and the user will be redirected to the selected group.
+    If some fields are incorrect, the user will receive information
+    about it and can try to enter them again.
+    """
+    post = get_object_or_404(Post, pk=post_id)
+    form = CommentForm(
+        request.POST,
+        instance = Comment(author=request.user, post=post)
+    )
+    if form.is_valid():
+        form.save()
+        return redirect('post', username=username, post_id=post_id)
+    context = {'form': form, 'edit': False}
+    return render(request, 'posts/post.html', context)
 
 
 @require_http_methods(['GET', 'POST'])
@@ -82,12 +111,16 @@ def new_post(request):
     If some fields are incorrect, the user will receive information
     about it and can try to enter them again.
     """
-    form = PostForm(request.POST or None, instance=Post(author=request.user))
+    form = PostForm(
+        request.POST or None,
+        files = request.FILES or None,
+        instance = Post(author=request.user)
+    )
     if form.is_valid():
         form.save()
         return redirect('index')
     context = {'form': form, 'edit': False}
-    return render(request, 'posts/manage_post.html', context)
+    return render(request, 'posts/manage_comment.html', context)
 
 
 @require_http_methods(['GET', 'POST'])
@@ -104,9 +137,30 @@ def post_edit(request, username, post_id):
     post = get_object_or_404(Post, pk=post_id, author__username=username)
     if post.author != request.user:
         return redirect('post', username=username, post_id=post_id)
-    form = PostForm(request.POST or None, instance=post)
+    form = PostForm(
+        request.POST or None,
+        files = request.FILES or None,
+        instance=post
+    )
     if form.is_valid():
         form.save()
         return redirect('post', username=username, post_id=post_id)
     context = {'form': form, 'edit': True}
     return render(request, 'posts/manage_post.html', context)
+
+
+def page_not_found(request, exception=None):
+    return render(
+        request,
+        'misc/404.html',
+        {'path': request.path},
+        status=HTTPStatus.NOT_FOUND
+    )
+
+
+def server_error(request):
+    return render(
+        request,
+        'misc/500.html',
+        status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )

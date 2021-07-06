@@ -10,7 +10,7 @@
       {% endfor %}
     {% endfor %}
   {% endif %}
-  <form method="post">
+  <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% if next != None %}
       <input type="hidden" name="next" value="{{ next }}">
