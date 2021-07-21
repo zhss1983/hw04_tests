@@ -18,6 +18,8 @@ class PostForm(forms.ModelForm):
 
     def clean_image(self):
         image = self.cleaned_data['image']
+        if not image:
+            return image
         img = Image.open(image)
         if img.width < settings.MIN_WIDTH:
             raise forms.ValidationError(
@@ -33,6 +35,7 @@ class PostForm(forms.ModelForm):
                  f'{settings.MIN_HEIGHT} px.'),
                 params={'height': img.height},
             )
+        return image
 
 
 class CommentForm(forms.ModelForm):

@@ -84,10 +84,11 @@ class Post(models.Model):
         return self.text[:15]
 
     def save(self, *args, **kwargs):
-        img = Image.open(self.image)
+        image = self.image
+        img = Image.open(image)
         if img.width < settings.MIN_WIDTH:
             raise Exception(
-                (f'Ширина изображения меньше {settings.MIN_WIDTH} px, '
+                   (f'Ширина изображения меньше {settings.MIN_WIDTH} px, '
                  f'загрузите изображение по меньшей мере {settings.MIN_WIDTH}x'
                  f'{settings.MIN_HEIGHT} px.'),
             )
@@ -97,7 +98,7 @@ class Post(models.Model):
                  f'загрузите изображение по меньшей мере {settings.MIN_WIDTH}x'
                  f'{settings.MIN_HEIGHT} px.'),
             )
-        return self.image
+        super().save(*args, **kwargs)
 
 class Comment(models.Model):
     post = models.ForeignKey(

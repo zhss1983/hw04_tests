@@ -137,12 +137,9 @@ def post_edit(request, username, post_id):
     post = get_object_or_404(Post, pk=post_id, author__username=username)
     if post.author != request.user:
         return redirect('post', username=username, post_id=post_id)
-    if request.method == 'POST':
+    image_clear = bool(post.image)
+    if image_clear and request.method == 'POST':
         path = str(post.image.path)
-#        path_url = str(post.image.url)
-#        print('URL:', path_url)
-#        print(settings.MEDIA_URL)
-#        print(settings.MEDIA_ROOT)
     form = PostForm(
         request.POST or None,
         files=request.FILES or None,
@@ -150,8 +147,10 @@ def post_edit(request, username, post_id):
     )
     if form.is_valid():
         form.save()
-        post.refresh_from_db()
-        os.path.exists(path) and path != post.image.path and os.remove(path)
+        if image_clear:
+            post.refresh_from_db()
+            if post.image and os.path.exists(path) and path != post.image.path:
+                os.remove(path)
         return redirect('post', username=username, post_id=post_id)
     context = {'post': post, 'form': form}
     return render(request, 'posts/manage_post.html', context)
@@ -162,8 +161,9 @@ def post_edit(request, username, post_id):
 def post_delete(request, username, post_id):
     """Delete the author's post."""
     post = get_object_or_404(Post, pk=post_id, author__username=username)
-    if os.path.exists(post.image.path):
-        os.remove(post.image.path)
+    if post.image:
+        if os.path.exists(post.image.path):
+            os.remove(post.image.path)
     post.delete()
     return redirect(request.POST['this_url'])
 
