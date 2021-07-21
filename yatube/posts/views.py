@@ -1,13 +1,18 @@
+import os
+
 from http import HTTPStatus
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.cache import cache_page
+from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.vary import vary_on_cookie
 
 from .forms import CommentForm, PostForm
-from .models import Group, Post, User, Comment
-from yatube.settings import DELTA_PAGE_COUNT, MAX_PAGE_COUNT
+from .models import Comment, Follow, Group, Post, User
+from yatube.settings import CACHE_TTL, DELTA_PAGE_COUNT, MAX_PAGE_COUNT
 
 
 def my_paginator(
@@ -33,6 +38,8 @@ def my_paginator(
     }
 
 
+@cache_page(CACHE_TTL, key_prefix='index_page')
+@vary_on_cookie
 def index(request):
     """Return page with MAX_PAGE_COUNT posts."""
     post_list = Post.objects.select_related('author')
@@ -54,54 +61,47 @@ def group_posts(request, slug):
     }
     return render(request, 'posts/group.html', context)
 
-
+@require_http_methods(('GET', 'POST'))
 def profile(request, username):
     """Shows user profile"""
     user = get_object_or_404(User, username=username)
-    post_list = user.posts.all()
+    post_list = user.posts.select_related('author')
     paginator = my_paginator(post_list, request.GET.get('page'))
+    following = request.user.is_authenticated and request.user.follower.filter(
+        author=user).exists()
     context = {
         **paginator,
         'author': user,
+        'following': following,
     }
     return render(request, 'posts/profile.html', context)
 
 
+@require_http_methods(('GET', 'POST'))
 def post_view(request, username, post_id):
     """Shows the selected post."""
     post = get_object_or_404(Post, pk=post_id, author__username=username)
-    form = CommentForm(instance=Comment(author=request.user, post=post))
+    form = CommentForm()
     context = {'form': form, 'post': post}
     return render(request, 'posts/post.html', context)
 
 
-@require_http_methods(['POST'])
 @login_required
+@require_POST
 def add_comment(request, username, post_id):
-    """Add new post's comment in blog.
-
-    This method form a page for writeing new post's comment and check
-    it one.
-    ????????
-    If all fields are correct, the new record will be added to
-    the database and the user will be redirected to the selected group.
-    If some fields are incorrect, the user will receive information
-    about it and can try to enter them again.
-    """
-    post = get_object_or_404(Post, pk=post_id)
+    """Add new post's comment in blog."""
+    post = get_object_or_404(Post, pk=post_id, author__username=username)
     form = CommentForm(
         request.POST,
-        instance = Comment(author=request.user, post=post)
+        instance=Comment(author=request.user, post=post)
     )
     if form.is_valid():
         form.save()
-        return redirect('post', username=username, post_id=post_id)
-    context = {'form': form, 'edit': False}
-    return render(request, 'posts/post.html', context)
+    return redirect('post', username=username, post_id=post_id)
 
 
-@require_http_methods(['GET', 'POST'])
 @login_required
+@require_http_methods(('GET', 'POST'))
 def new_post(request):
     """Add new record in blog.
 
@@ -113,17 +113,17 @@ def new_post(request):
     """
     form = PostForm(
         request.POST or None,
-        files = request.FILES or None,
-        instance = Post(author=request.user)
+        files=request.FILES or None,
+        instance=Post(author=request.user)
     )
     if form.is_valid():
         form.save()
         return redirect('index')
-    context = {'form': form, 'edit': False}
-    return render(request, 'posts/manage_comment.html', context)
+    context = {'form': form}
+    return render(request, 'posts/manage_post.html', context)
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(('GET', 'POST'))
 @login_required
 def post_edit(request, username, post_id):
     """Edit record in blog.
@@ -137,16 +137,35 @@ def post_edit(request, username, post_id):
     post = get_object_or_404(Post, pk=post_id, author__username=username)
     if post.author != request.user:
         return redirect('post', username=username, post_id=post_id)
+    if request.method == 'POST':
+        path = str(post.image.path)
+#        path_url = str(post.image.url)
+#        print('URL:', path_url)
+#        print(settings.MEDIA_URL)
+#        print(settings.MEDIA_ROOT)
     form = PostForm(
         request.POST or None,
-        files = request.FILES or None,
+        files=request.FILES or None,
         instance=post
     )
     if form.is_valid():
         form.save()
+        post.refresh_from_db()
+        os.path.exists(path) and path != post.image.path and os.remove(path)
         return redirect('post', username=username, post_id=post_id)
-    context = {'form': form, 'edit': True}
+    context = {'post': post, 'form': form}
     return render(request, 'posts/manage_post.html', context)
+
+
+@login_required
+@require_POST
+def post_delete(request, username, post_id):
+    """Delete the author's post."""
+    post = get_object_or_404(Post, pk=post_id, author__username=username)
+    if os.path.exists(post.image.path):
+        os.remove(post.image.path)
+    post.delete()
+    return redirect(request.POST['this_url'])
 
 
 def page_not_found(request, exception=None):
@@ -164,3 +183,69 @@ def server_error(request):
         'misc/500.html',
         status=HTTPStatus.INTERNAL_SERVER_ERROR
     )
+
+
+@login_required
+def follow_index(request):
+    """Return a page with posts by subscribed authors."""
+    post_list = Post.objects.filter(
+        author__following__user=request.user
+    ).select_related('author', 'group').prefetch_related('comments')
+    context = my_paginator(
+        post_list,
+        request.GET.get('page'),
+    )
+    return render(request, 'posts/follow.html', context)
+
+@login_required
+@require_http_methods(('GET', 'POST'))
+def profile_follow(request, username):
+    """Subscribe the user on the author."""
+    author = get_object_or_404(User, username=username)
+    if request.user != author:
+        Follow.objects.get_or_create(user=request.user, author=author)
+    return redirect('profile', username=username)
+
+
+@login_required
+@require_http_methods(('GET', 'POST'))
+def profile_unfollow(request, username):
+    """Unsubscribe the user from the author."""
+    Follow.objects.filter(author__username=username,
+                          user=request.user).delete()
+    return redirect('profile', username=username)
+
+
+@login_required
+@require_http_methods(('GET', 'POST'))
+def comment_edit(request, username, comment_id):
+    """Edit the user's comment."""
+    user = get_object_or_404(User, username=username)
+    comment = get_object_or_404(Comment, id=comment_id, author=request.user)
+    post = comment.post
+    post_username = post.author.username
+    if request.user != user:
+        return redirect('post', username=post_username, post_id=post.pk)
+    form = CommentForm(
+        request.POST or None,
+        instance=comment
+    )
+    if form.is_valid():
+        form.save()
+        return redirect('post', username=post_username, post_id=post.pk)
+    context = {'form': form, 'post': post}
+    return render(request, 'posts/post.html', context)
+
+
+@login_required
+@require_POST
+def comment_delete(request, username, comment_id):
+    """Delete the user's comment."""
+    user = get_object_or_404(User, username=username)
+    comment = get_object_or_404(Comment, id=comment_id, author=request.user)
+    post = comment.post
+    post_username = post.author.username
+    if request.user != user:
+        return redirect('post', username=post_username, post_id=post.pk)
+    comment.delete()
+    return redirect('post', username=post_username, post_id=post.pk)

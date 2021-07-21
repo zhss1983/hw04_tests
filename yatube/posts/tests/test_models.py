@@ -1,29 +1,34 @@
 from django.test import TestCase
 
-from .test_setups import MySetupTestCase
+from posts.models import Comment, Group, Post, User
 
 
-class PostModelTest(TestCase, MySetupTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        MySetupTestCase.setUpClass()
+class ModelTestCase(TestCase):
 
     def test_object_text_field(self):
-        """Check __str__, it must return self.text[:15]."""
+        """Check __str__"""
         cls = self.__class__
-        result_str = cls.post.text[:15]
-        self.assertEqual(result_str, str(cls.post))
-
-
-class GroupModelTest(TestCase, MySetupTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        MySetupTestCase.setUpClass()
-
-    def test_object_title_field(self):
-        """Check __str__, it must return self.title."""
-        cls = self.__class__
-        result_str = cls.group.title
-        self.assertEqual(result_str, str(cls.group))
+        user = User.objects.create(username=f'user_{cls.__name__}')
+        group = Group.objects.create(
+            title=f'Тест_{cls.__name__}',
+            slug=f'test_{cls.__name__}',
+            description=f'Текст_{cls.__name__}',
+        )
+        post = Post.objects.create(
+            text=f'Тест_{cls.__name__}',
+            author=user,
+            group=group,
+        )
+        comment = Comment.objects.create(
+            post=post,
+            author=user,
+            text=f'Тест_{cls.__name__}'
+        )
+        models_string_presentations = (
+            (comment.text[:15], comment),
+            (group.title, group),
+            (post.text[:15], post),
+        )
+        for string_presentation, model in models_string_presentations:
+            with self.subTest(exept_str=string_presentation, model=model):
+                self.assertEqual(string_presentation, str(model))

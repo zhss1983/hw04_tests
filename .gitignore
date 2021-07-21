@@ -1,5 +1,6 @@
 # Мои исключения
 static/
+media/
 sent_emails/
 *.log
 log.*
@@ -161,3 +162,5 @@ dmypy.json
 .history/
 
 .mypy_cache
+/Промокод на литрес YPRAKTIKUM.txt
+/Vitaliy.py
