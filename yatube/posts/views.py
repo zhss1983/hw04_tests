@@ -1,5 +1,4 @@
 import os
-
 from http import HTTPStatus
 
 from django.conf import settings
@@ -12,14 +11,13 @@ from django.views.decorators.vary import vary_on_cookie
 
 from .forms import CommentForm, PostForm
 from .models import Comment, Follow, Group, Post, User
-from yatube.settings import CACHE_TTL, DELTA_PAGE_COUNT, MAX_PAGE_COUNT
 
 
 def my_paginator(
         page_list,
         page_number,
-        dcount=DELTA_PAGE_COUNT,
-        count=MAX_PAGE_COUNT,
+        dcount=settings.DELTA_PAGE_COUNT,
+        count=settings.MAX_PAGE_COUNT,
 ):
     """Return dictionary of variables for the paginator.
 
@@ -38,7 +36,7 @@ def my_paginator(
     }
 
 
-@cache_page(CACHE_TTL, key_prefix='index_page')
+@cache_page(settings.CACHE_TTL, key_prefix='index_page')
 @vary_on_cookie
 def index(request):
     """Return page with MAX_PAGE_COUNT posts."""
@@ -141,8 +139,8 @@ def post_edit(request, username, post_id):
     if image_clear and request.method == 'POST':
         path = str(post.image.path)
     form = PostForm(
-        request.POST or None,
-        files=request.FILES or None,
+        request.POST,
+        files=request.FILES,
         instance=post
     )
     if form.is_valid():
@@ -161,9 +159,6 @@ def post_edit(request, username, post_id):
 def post_delete(request, username, post_id):
     """Delete the author's post."""
     post = get_object_or_404(Post, pk=post_id, author__username=username)
-    if post.image:
-        if os.path.exists(post.image.path):
-            os.remove(post.image.path)
     post.delete()
     return redirect(request.POST['this_url'])
 
@@ -227,7 +222,7 @@ def comment_edit(request, username, comment_id):
     if request.user != user:
         return redirect('post', username=post_username, post_id=post.pk)
     form = CommentForm(
-        request.POST or None,
+        request.POST,
         instance=comment
     )
     if form.is_valid():

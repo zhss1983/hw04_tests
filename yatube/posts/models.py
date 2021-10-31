@@ -78,13 +78,19 @@ class Post(models.Model):
     class Meta:
         verbose_name = 'Пост'
         verbose_name_plural = 'Посты'
-        ordering = ('-pub_date',)
+        ordering = ('-pub_date', )
 
     def __str__(self):
         return self.text[:15]
 
+    def delete(self, *args, **kwargs):
+        self.image.delete()
+        return super().delete(*args, **kwargs)
+
     def save(self, *args, **kwargs):
         image = self.image
+        if not image:
+            return super().save(*args, **kwargs)
         img = Image.open(image)
         if img.width < settings.MIN_WIDTH:
             raise Exception(
@@ -98,7 +104,8 @@ class Post(models.Model):
                  f'загрузите изображение по меньшей мере {settings.MIN_WIDTH}x'
                  f'{settings.MIN_HEIGHT} px.'),
             )
-        super().save(*args, **kwargs)
+        return super().save(*args, **kwargs)
+
 
 class Comment(models.Model):
     post = models.ForeignKey(
@@ -148,7 +155,7 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        ordering = ('user', 'author')
+        ordering = ('user__username', 'author__username')
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'author'),
@@ -156,6 +163,6 @@ class Follow(models.Model):
             ),
             models.CheckConstraint(
                 check=~Q(user=F('author')),
-                name='nama_not_author',
+                name='name_not_author',
             )
         )

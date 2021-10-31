@@ -134,7 +134,21 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = 'index'
 
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_HOST = 'smtp.mail.ru'
+EMAIL_PORT = 2525
+EMAIL_HOST_USER = "zhss.83@mail.ru"
+EMAIL_HOST_PASSWORD = "xxxxxxxxxxxxxxxxxxxx"
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+
+SERVER_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
 MAX_PAGE_COUNT = 10
@@ -147,7 +161,4 @@ CACHES = {
 }
 CACHE_TTL = 20
 
-#THUMBNAIL_CACHE_TIMEOUT = None
-
 MIN_WIDTH, MIN_HEIGHT = 480, 169
-
