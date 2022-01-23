@@ -4,9 +4,18 @@ import sentry_sdk
 
 from sentry_sdk.integrations.django import DjangoIntegration
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+SECRET_KEY = '@7wb^@135m+&okzndlvb1q$wzo1c1k16sxeq%d(30+e6(qk^xf'
+
+DEBUG = True
+
 if not DEBUG:
     sentry_sdk.init(
-        dsn="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        dsn="@7wb^@135m+&okzndlvb1q$wzo1c1k16sxeq%d(30+e6(qk^xf",
         integrations=[DjangoIntegration()],
 
         # Set traces_sample_rate to 1.0 to capture 100%
@@ -18,16 +27,6 @@ if not DEBUG:
         # django.contrib.auth) you may enable sending PII data.
         send_default_pii=True
     )
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
-SECRET_KEY = '@7wb^@135m+&okzndlvb1q$wzo1c1k16sxeq%d(30+e6(qk^xf'
-
-DEBUG = True
-#DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -91,11 +90,11 @@ TEMPLATES = [
 WSGI_APPLICATION = 'yatube.wsgi.application'
 
 DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#    }
-    'default': env.db(),
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+#    'default': env.db(),
 }
 
 AUTH_PASSWORD_VALIDATORS = [
