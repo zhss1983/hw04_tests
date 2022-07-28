@@ -1,17 +1,25 @@
+![example workflow](https://github.com/zhss1983/hw04_tests/actions/workflows/python-app.yml/badge.svg)
+
 # Документация к YaTube
 
 
 ## Описание:
 
 YaTube - сервис публикации своего дневника. Есть полный функционал по внесению
- собственных записей с изображением и подписки на других авторов. Есть
- возможность оставлять комментарии. Классическая MVT архитектура, пагинация, 
- кэширование. Регистрация и верификация пользователей, смена пароля, 
- восстановление через почту. Тесты.
+ собственных записей с изображением и подписки на других авторов. Запросы к базе
+ данных оптимизированы. Есть возможность оставлять комментарии. Классическая MVT
+ архитектура, пагинация, кэширование. Регистрация и верификация пользователей,
+ смена пароля, восстановление через почту. Тесты.
 
 ### Стек технологий:
 
-Python 3, Django 3, MySQL, Unittest, HTML, CSS.
+**[Python 3](https://www.python.org/downloads/), 
+ [Django 3/4](https://docs.djangoproject.com/en/4.0/), 
+ [MySQL](https://dev.mysql.com/doc/), 
+ [Unittest](https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/unit-tests/), 
+ [DjangoTemplates](https://docs.djangoproject.com/en/4.0/topics/templates/), 
+ HTML, 
+ CSS.**
 
 ## Как запустить проект:
 
